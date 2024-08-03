@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from database import create_food_item,create_station, create_train, create_vendor, update_food_item, update_station, update_train, update_vendor, create_order, update_order, create_user
+from database import create_food_item,create_station, create_train, create_vendor, update_food_item, update_station, update_train, update_vendor, create_order, update_order, create_user, get_train_by_train_id
 from dotenv import load_dotenv
 import os
 from logger import logger
@@ -121,7 +121,7 @@ def create_train_endpoint():
     data = request.json
     try:
         train_id = create_train(
-            train_id=data.get('train_id'),
+            train_id=data.get('train_id'),  
             name=data.get('name'),
             route=data.get('route'),
             active=data.get('active', True)  # Default to True if not specified
@@ -231,6 +231,21 @@ def vendors_view_all_orders_endpoint():
 
 
 
+
+@app.route('/get_stations', methods=['GET'])
+def get_stations_endpoint():
+    train_id = request.args.get('train_id')
+    try:
+        train = get_train_by_train_id(train_id)
+
+        if not train['active']:
+            return jsonify({"data" : "Train Inactive"}), 404
+        else:    
+            return jsonify({"data" : train['route']}), 200
+    except Exception as e:
+        return jsonify({"Error" : str(e)}), 400
+
+    
 
 if __name__ == "__main__":
     app.run(debug=True, port=FLASK_PORT)

@@ -116,7 +116,7 @@ def update_station(station_id, updates):
     """Updates a station in the stations collection."""
     query = {"station_id": station_id}
     new_values = {"$set": updates}
-    result = stations_collection.update_one(query, new_values)
+    result = stations_colltrection.update_one(query, new_values)
     return result.modified_count
 
 
@@ -137,12 +137,16 @@ def update_order(order_id, updates):
     return result.modified_count
 
 
-
-
-
-
-
-
+def get_train_by_train_id(train_id):
+    
+    try:
+        train = trains_collection.find_one({"train_id" : train_id})
+        if not train:
+            return "Train with {train_id} not found in trains_collection".format(train_id)
+        
+        return train
+    except Exception as e:
+        return f"Error : {e}"
 
 
 
