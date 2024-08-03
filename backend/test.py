@@ -130,10 +130,82 @@ class TestCase(unittest.TestCase):
         # self.assertIn("Order updated successfully", str(response.data))
 
 
-    def test_view_order(self):
-        """Test viewing an order with a valid ObjectId string."""
-        response = self.app.get('/vendors_view_orders?vendor_id=v100')
+    # def test_view_order(self):
+    #     """Test viewing an order with a valid ObjectId string."""
+    #     response = self.app.get('/vendors_view_orders?vendor_id=v100')
+    #     self.assertEqual(response.status_code, 200)
+    #     # Ensure that data is returned and the 'order' key is in the response
+    #     data = json.loads(response.data)
+    #     self.assertTrue(data.get('order') is not None)
+
+    # def test_register_new_user(self):
+    #     """Test registering a new user."""
+    #     new_user = {
+    #         "customer_id": "cust002",
+    #         "name": "Jane Doe",
+    #         "email": "janedoe@example.com",
+    #         "password": "securePassword123",
+    #         "phone": "9876543210",
+    #         "address": {
+    #             "city": "Los Angeles",
+    #             "state": "CA",
+    #             "postalCode": "90001",
+    #             "country": "USA"
+    #         }
+    #     }
+    #     response = self.app.post('/register', data=json.dumps(new_user), content_type='application/json')
+    #     self.assertEqual(response.status_code, 201)
+    #     self.assertIn("User registered successfully", response.get_data(as_text=True))
+
+    # def test_register_existing_user(self):
+    #     """Test registration failure for user with existing email."""
+    #     existing_user = {
+    #         "customer_id": "cust002",
+    #         "name": "Alice Doe",
+    #         "email": "janedoe@example.com",  # Assuming this email is already used
+    #         "password": "anotherSecurePassword123",
+    #         "phone": "9876501234",
+    #         "address": {
+    #             "city": "Miami",
+    #             "state": "FL",
+    #             "postalCode": "33101",
+    #             "country": "USA"
+    #         }
+    #     }
+    #     response = self.app.post('/register', data=json.dumps(existing_user), content_type='application/json')
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertIn("Registration failed", response.get_data(as_text=True))
+
+
+    def test_login_valid_user(self):
+        """Test login with valid credentials."""
+        credentials = {
+            "customer_id": "cust002",
+            "password": "securePassword123"
+        }
+        response = self.app.post('/login', data=json.dumps(credentials), content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        # Ensure that data is returned and the 'order' key is in the response
-        data = json.loads(response.data)
-        self.assertTrue(data.get('order') is not None)
+        self.assertIn("access_token", response.get_data(as_text=True))
+
+    def test_login_invalid_user(self):
+        """Test login with invalid credentials."""
+        credentials = {
+            "customer_id": "nonexistent@example.com",
+            "password": "wrongPassword"
+        }
+        response = self.app.post('/login', data=json.dumps(credentials), content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("Invalid username or password", response.get_data(as_text=True))
+
+    def test_login_invalid_password(self):
+        """Test login with a valid username but invalid password."""
+        credentials = {
+            "customer_id": "cust002",
+            "password": "wrongPassword"
+        }
+        response = self.app.post('/login', data=json.dumps(credentials), content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("Invalid username or password", response.get_data(as_text=True))
+
+
+

@@ -1,4 +1,4 @@
-from config import vendors_collection, food_items_collection, stations_collection, trains_collection, orders_collection
+from config import vendors_collection, food_items_collection, stations_collection, trains_collection, orders_collection, customers_collection
 from datetime import datetime
 from bson import ObjectId
 
@@ -70,6 +70,27 @@ def create_order(customer_id, train_id, station_id, vendor_id, items, total_pric
     return result.inserted_id
 
 
+def create_user(customer_id, name, email, password_hash, phone, address):
+    """Create a new user in the MongoDB customers_collection."""
+            
+    try:
+        user = {
+            "customer_id": customer_id,
+            "name": name,
+            "email": email,
+            "password_hash": password_hash,
+            "phone": phone,
+            "address": address
+        }
+        # Insert the user into the collection
+        result = customers_collection.insert_one(user)
+        return True
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+
+
 
 
 #  ----------- funtions for updating entities -----------------
@@ -117,36 +138,21 @@ def update_order(order_id, updates):
 
 
 
-# utility functions
-
-def view_all_orders(vendor_id):
-    """Returns all orders containing items from the specified vendor."""
-    # Using aggregation to unwind items array and match vendor_id in the items
-    pipeline = [
-        {"$unwind": "$items"},
-        {"$match": {"vendor_id": vendor_id}},
-        {"$group": {
-            "_id": "$_id",  # Group back by order ID to re-assemble the order documents
-            "customer_id": {"$first": "$customer_id"},
-            "train_id": {"$first": "$train_id"},
-            "station_id": {"$first": "$station_id"},
-            "items": {"$push": "$items"},
-            "total_price": {"$first": "$total_price"},
-            "status": {"$first": "$status"},
-            "order_time": {"$first": "$order_time"}
-        }}
-    ]
-    return list(orders_collection.aggregate(pipeline))
 
 
 
 
 
 
-if __name__ == "__main__":
+
+
+
+
+
+# if __name__ == "__main__":
     # new_vendor_id = create_vendor("v001", "Best Vendors Inc.", {"phone": "123-456-7890", "email": "contact@bestvendors.com"})
     # new_food_item_id = create_food_item("f001", "Cheese Pizza", "Delicious cheese pizza", 9.99, True, new_vendor_id)
     # new_station_id = create_station("s001", "Central Station", "123 Main St, Big City")
     # new_train_id = create_train("t001", "Express 101", ["s001"], True)
 
-    print(view_all_orders("v100"))
+    # print(view_all_orders("v100"))

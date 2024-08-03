@@ -1,14 +1,70 @@
 from flask import Flask, request, jsonify
-from database import create_food_item,create_station, create_train, create_vendor, update_food_item, update_station, update_train, update_vendor, create_order, update_order, view_all_orders
+from database import create_food_item,create_station, create_train, create_vendor, update_food_item, update_station, update_train, update_vendor, create_order, update_order, create_user
 from dotenv import load_dotenv
 import os
 from logger import logger
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from utils import view_all_orders, get_user_by_username
+
 
 load_dotenv()
 
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = os.getenv("AUTH_SECRET_KEY")
+
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+
 FLASK_PORT=os.getenv("FLASK_PORT")
+
+
+# Register and Login routes
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    customer_id = data.get('customer_id')
+    name = data.get('name')
+    email = data.get('email')
+    plain_password = data.get('password')
+    phone = data.get('phone')
+    address = data.get('address')
+
+
+    # Hash the password
+    hashed_password = bcrypt.generate_password_hash(plain_password).decode('utf-8')
+
+    # Save the user to your database
+    # Assuming you have a function `create_user` that saves the user and returns a success flag
+    try:
+        success = create_user(customer_id,name, email, hashed_password, phone, address)
+
+        if success:
+            return jsonify({"success": True, "message": "User registered successfully"}), 201
+        else:
+            return jsonify({"success": False, "message": "Registration failed"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json 
+    username = data.get("customer_id")
+    plain_password = data.get("password")
+
+    # Fetch the user from your database
+    # Assuming you have a function `get_user_by_username` that returns the user data
+    user = get_user_by_username(username)
+
+    if user and bcrypt.check_password_hash(user['password_hash'], plain_password):
+        # Generate a token
+        access_token = create_access_token(identity=username)
+        return jsonify({"success": True, "access_token": access_token}), 200
+    else:
+        return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
 
 
 # Create Entities
