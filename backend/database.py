@@ -54,6 +54,8 @@ def create_train(train_id, name, route, active=True):
     return result.inserted_id
 
 
+
+
 def create_order(customer_id, train_id, station_id, vendor_id, items, total_price, status):
     """Creates a new order in the orders collection."""
     order = {
@@ -148,10 +150,43 @@ def get_train_by_train_id(train_id):
     except Exception as e:
         return f"Error : {e}"
 
+def get_vendor_info(key_name, key_value):
+
+    try:    
+        vendors = list(vendors_collection.find({key_name: key_value}))
+        return vendors
+    except Exception as e:
+        return f"Error : {e}"
+
+def get_food_items_info(key_name, key_value):
+
+    try:
+        food_items = list(food_items_collection.find({key_name :key_value}))
+        return food_items
+    except Exception as e:
+        return f"Error : {e}"
 
 
+def get_order_info_order_id(order_id, key_name=None):
 
+    try:
+        response = orders_collection.find_one({"_id" : ObjectId(order_id)})
+        if key_name:
+            response = response[key_name]
+        
+        return response
+    except Exception as e:
+        return f"Error : {e}"
+        
 
+def get_orders_using_id(key_name, key_value):
+
+    try:
+        response = list(orders_collection.find({key_name: key_value}))
+
+        return response
+    except Exception as e:
+        return f"Error : {e}"
 
 # if __name__ == "__main__":
     # new_vendor_id = create_vendor("v001", "Best Vendors Inc.", {"phone": "123-456-7890", "email": "contact@bestvendors.com"})

@@ -1,6 +1,7 @@
 from config import vendors_collection, food_items_collection, stations_collection, trains_collection, orders_collection, customers_collection
 from datetime import datetime
 from bson import ObjectId
+import json
 
 
 
@@ -35,3 +36,24 @@ def get_user_by_username(customer_id):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
+
+def parse_for_object_id(response):   
+
+    if isinstance(response, dict):
+        if "_id" in response:
+            response["_id"] = str(response["_id"])
+        
+    if isinstance(response, list):    
+        for index, obj in enumerate(response):
+            if "_id" in obj:
+                response[index]["_id"] = str(obj["_id"])
+    
+    return response
+
+def calculate_total_price(items):
+
+    quantity = int(items["quantity"])
+    price_per_item = int(items["price"])
+
+    return str(quantity*price_per_item)

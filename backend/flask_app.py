@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
-from database import create_food_item,create_station, create_train, create_vendor, update_food_item, update_station, update_train, update_vendor, create_order, update_order, create_user, get_train_by_train_id
+from database import create_food_item,create_station, create_train, create_vendor, update_food_item, update_station, update_train, update_vendor, create_order, update_order, create_user, get_train_by_train_id, get_vendor_info, get_food_items_info,get_orders_using_id,get_order_info_order_id
 from dotenv import load_dotenv
 import os
 from logger import logger
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
-from utils import view_all_orders, get_user_by_username
+from utils import view_all_orders, get_user_by_username, parse_for_object_id, calculate_total_price
+from bson import json_util, ObjectId
 
 
 load_dotenv()
@@ -136,11 +137,14 @@ def create_train_endpoint():
 def create_order_endpoint():
     data = request.json
     try:
+        total_price = calculate_total_price(data["items"])
+        data["total_price"] = total_price
         order_id = create_order(**data)
         return jsonify({"success": True, "order_id": str(order_id)}), 201
     except Exception as  e:
          return jsonify({"success": False, "message": str(e)}), 500
     
+
 
 # Update
 
@@ -223,8 +227,7 @@ def vendors_view_all_orders_endpoint():
     vendor_id = request.args.get("vendor_id")
     try:
         orders = view_all_orders(vendor_id)
-        for index, order in enumerate(orders):
-            orders[index]["_id"] = str(order['_id'])
+        orders = parse_for_object_id(orders)
         return jsonify({"success": True, "orders": orders}), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -245,7 +248,63 @@ def get_stations_endpoint():
     except Exception as e:
         return jsonify({"Error" : str(e)}), 400
 
+
+@app.route('/get_vendors_station_id', methods=['GET'])
+def get_vendors_endpoints():
     
+    station_id = request.args.get("station_id")
+
+    try:
+        vendors = get_vendor_info("station_id", station_id)
+        vendors = parse_for_object_id(vendors)
+        return jsonify({"data" : vendors}), 200
+    except Exception as e:
+        return jsonify({"Error" : str(e)}), 400
+
+
+@app.route('/get_food_items_vendor_id', methods=['GET'])
+def get_food_items_endpoints():
+    
+    vendor_id = request.args.get("vendor_id")
+
+    try:
+        food_items = get_food_items_info("vendor_id", vendor_id)
+        food_items = parse_for_object_id(food_items)
+        return jsonify({"data" : food_items}), 200
+    except Exception as e:
+        return jsonify({"Error" : str(e)}), 400
+
+
+# Helper APIs
+@app.route("/get_order_info", methods=['GET'])
+def get_total_price_endpoints():
+
+    order_id = request.args.get("order_id")
+    key_name = request.args.get("key_name", None)
+    try:
+        order_info = get_order_info_order_id(order_id, key_name)
+
+        order_info = parse_for_object_id(order_info)
+
+        return jsonify({"data" : order_info}), 200
+    except Exception as e:
+        return jsonify({"Error" : str(e)}),400
+
+
+@app.route("/customers_view_orders", methods=["GET"])
+def customers_view_order_endpoint():
+
+    customer_id = request.args.get("customer_id")
+
+    try:
+        response = get_orders_using_id("customer_id", customer_id)
+        response = parse_for_object_id(response)
+
+        return jsonify({"data" : response}),200
+    except Exception as e:
+        return jsonify({"Error":  str(e)}), 400
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=FLASK_PORT)
