@@ -7,27 +7,6 @@ import json
 
 # utility functions
 
-def view_all_orders(vendor_id):
-    """Returns all orders containing items from the specified vendor."""
-    # Using aggregation to unwind items array and match vendor_id in the items
-    pipeline = [
-        {"$unwind": "$items"},
-        {"$match": {"vendor_id": vendor_id}},
-        {"$group": {
-            "_id": "$_id",  # Group back by order ID to re-assemble the order documents
-            "customer_id": {"$first": "$customer_id"},
-            "train_id": {"$first": "$train_id"},
-            "station_id": {"$first": "$station_id"},
-            "items": {"$push": "$items"},
-            "total_price": {"$first": "$total_price"},
-            "status": {"$first": "$status"},
-            "order_time": {"$first": "$order_time"}
-        }}
-    ]
-    return list(orders_collection.aggregate(pipeline))
-
-
-
 def get_user_by_username(customer_id):
     """Retrieve a user by their email from the MongoDB customers_collection."""
     try:
@@ -36,6 +15,57 @@ def get_user_by_username(customer_id):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
+
+
+def get_train_by_train_id(train_id):
+    
+    try:
+        train = trains_collection.find_one({"train_id" : train_id})
+        if not train:
+            return "Train with {train_id} not found in trains_collection".format(train_id)
+        
+        return train
+    except Exception as e:
+        return f"Error : {e}"
+
+def get_vendor_info(key_name, key_value):
+
+    try:    
+        vendors = list(vendors_collection.find({key_name: key_value}))
+        return vendors
+    except Exception as e:
+        return f"Error : {e}"
+
+def get_food_items_info(key_name, key_value):
+
+    try:
+        food_items = list(food_items_collection.find({key_name :key_value}))
+        return food_items
+    except Exception as e:
+        return f"Error : {e}"
+
+
+def get_order_info_order_id(order_id, key_name=None):
+
+    try:
+        response = orders_collection.find_one({"_id" : ObjectId(order_id)})
+        if key_name:
+            response = response[key_name]
+        
+        return response
+    except Exception as e:
+        return f"Error : {e}"
+        
+
+def get_orders_using_id(key_name, key_value):
+
+    try:
+        response = list(orders_collection.find({key_name: key_value}))
+
+        return response
+    except Exception as e:
+        return f"Error : {e}"
 
 
 def parse_for_object_id(response):   
@@ -57,3 +87,5 @@ def calculate_total_price(items):
     price_per_item = int(items["price"])
 
     return str(quantity*price_per_item)
+
+
