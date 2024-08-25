@@ -20,6 +20,10 @@ jwt = JWTManager(app)
 FLASK_PORT=os.getenv("FLASK_PORT")
 
 
+@app.route('/', methods=['GET','POST'])
+def check_alive():
+    return jsonify({"Message" : "I Love you, 3000!"}),200
+
 # Register and Login routes
 
 @app.route('/register', methods=['POST'])
